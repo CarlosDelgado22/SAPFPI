@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAPFPI - Gestión Académica</title>
+
+  <!-- Fuentes e iconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Estilos CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="header">
+      <h1>SAPFPI - Gestión Integral</h1>
+    </div>
+
+    <!-- Barra de navegación por pestañas -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="instructores">Instructores</button>
+      <button class="tab-btn" data-tab="competencias">Competencias</button>
+      <button class="tab-btn" data-tab="asignaciones">Asignaciones</button>
+      <button class="tab-btn" data-tab="fichas">Fichas Tituladas</button>
+    </div>
+
+    <!-- Sección Instructores (visible por defecto) -->
+    <div id="instructores" class="tab-content active">
+      <div class="tab-header">
+        <h2>Listado de Instructores</h2>
+        <button id="btnAddInstructor" class="btn-primary">
+          <i class="fas fa-plus"></i> Nuevo Instructor
+        </button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Cargo</th>
+            <th>Vinculación</th>
+            <th>Líder</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="instructoresTbody">
+          <!-- Renderizado dinámico desde JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sección Competencias -->
+    <div id="competencias" class="tab-content">
+      <div class="tab-header">
+        <h2>Listado de Competencias</h2>
+        <button id="btnAddCompetencia" class="btn-primary">
+          <i class="fas fa-plus"></i> Nueva Competencia
+        </button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre Competencia</th>
+            <th>Tipo</th>
+            <th>Duración (Horas)</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="competenciasTbody">
+          <!-- Renderizado dinámico desde JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sección Asignaciones -->
+    <div id="asignaciones" class="tab-content">
+      <div class="tab-header">
+        <h2>Asignar Instructor a Competencia</h2>
+      </div>
+
+      <div class="form-row asignacion-controls">
+        <select id="asignInstrucSelect">
+          <option value="">Seleccione un instructor...</option>
+        </select>
+        <select id="asignCompetSelect">
+          <option value="">Seleccione una competencia...</option>
+        </select>
+        <button id="btnAsignar" class="btn-primary">
+          <i class="fas fa-link"></i> Asignar
+        </button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Instructor</th>
+            <th>Competencia Asignada</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="asignacionesTbody">
+          <!-- Renderizado dinámico desde JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sección Fichas Tituladas -->
+    <div id="fichas" class="tab-content">
+      <div class="tab-header">
+        <h2>Listado de Fichas Tituladas</h2>
+        <button id="btnAddFicha" class="btn-primary">
+          <i class="fas fa-plus"></i> Nueva Ficha
+        </button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Ficha</th>
+            <th>Programa</th>
+            <th>Jornada</th>
+            <th>Instructor Líder</th>
+            <th>Ambiente</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="fichasTbody">
+          <!-- Renderizado dinámico desde JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Script principal al final del body -->
+  <script src="js/js.js"></script>
+</body>
+</html>
