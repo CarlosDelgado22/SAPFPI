@@ -156,11 +156,59 @@ function renderInstructores() {
   });
 }
 
+function renderCompetencias() {
+  const tbody = document.getElementById('competenciasTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  // Muestra cada competencia y sus acciones para editarla o eliminarla.
+  competencias.forEach(comp => {
+    const row = tbody.insertRow();
+    row.insertCell(0).innerText = comp.id_competen;
+    row.insertCell(1).innerText = comp.nom_competen;
+    row.insertCell(2).innerText = comp.tip_competen || '';
+    row.insertCell(3).innerText = comp.dur_competen ?? '';
+
+    const actions = row.insertCell(4);
+    actions.innerHTML = `
+      <button class="icon-btn edit" data-id="${comp.id_competen}" aria-label="Editar competencia"><i class="fas fa-edit"></i></button>
+      <button class="icon-btn delete" data-id="${comp.id_competen}" aria-label="Eliminar competencia"><i class="fas fa-trash-alt"></i></button>
+    `;
+  });
+
+  tbody.querySelectorAll('.icon-btn.edit').forEach(btn => {
+    btn.addEventListener('click', event => {
+      const id = Number(event.currentTarget.dataset.id);
+      const comp = competencias.find(item => item.id_competen === id);
+      if (comp) abrirModalCompetencia(comp);
+    });
+  });
+
+  tbody.querySelectorAll('.icon-btn.delete').forEach(btn => {
+    btn.addEventListener('click', event => {
+      const id = Number(event.currentTarget.dataset.id);
+      // Se evita borrar competencias que todavía tengan instructores asignados.
+      if (instructorCompetencias.some(asig => asig.id_competen === id)) {
+        alert('No se puede eliminar la competencia porque tiene instructores asignados. Elimine primero esas asignaciones.');
+        return;
+      }
+
+      if (confirm(`¿Desea eliminar la competencia con ID ${id}?`)) {
+        competencias = competencias.filter(item => item.id_competen !== id);
+        guardarDatos();
+        renderAll();
+        actualizarSelectsAsignacion();
+      }
+    });
+  });
+}
+
 function renderAsignaciones() {
   const tbody = document.getElementById('asignacionesTbody');
   if (!tbody) return;
   tbody.innerHTML = '';
 
+  // Relaciona los identificadores guardados con los nombres visibles en la tabla.
   instructorCompetencias.forEach((asig, index) => {
     const inst = instructores.find(i => i.id_instruc === asig.id_instruc);
     const comp = competencias.find(c => c.id_competen === asig.id_competen);
@@ -168,10 +216,10 @@ function renderAsignaciones() {
     const row = tbody.insertRow();
     row.insertCell(0).innerText = inst ? `${inst.nom_instruc} ${inst.apelli_instruc}` : asig.id_instruc;
     row.insertCell(1).innerText = comp ? comp.nom_competen : asig.id_competen;
-    row.insertCell(2).innerHTML = `<button class="icon-btn delete" data-index="${index}"><i class="fas fa-trash-alt"></i></button>`;
+    row.insertCell(2).innerHTML = `<button class="icon-btn delete" data-index="${index}" aria-label="Eliminar asignación"><i class="fas fa-trash-alt"></i></button>`;
   });
 
-  document.querySelectorAll('#asignacionesTbody .icon-btn.delete').forEach(btn => {
+  tbody.querySelectorAll('.icon-btn.delete').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const idx = parseInt(e.currentTarget.dataset.index);
       instructorCompetencias.splice(idx, 1);
@@ -183,6 +231,7 @@ function renderAsignaciones() {
 
 function renderAll() {
   renderInstructores();
+  renderCompetencias();
   renderAsignaciones();
 }
 
@@ -285,9 +334,86 @@ function abrirModalInstructor(instructor = null) {
   };
 }
 
-// Funciones vacías para evitar errores al presionar los botones, se llenarán en los siguientes pasos
-function abrirModalCompetencia() {
-  console.log('Falta implementar el modal de competencias');
+function abrirModalCompetencia(competencia = null) {
+  // Si se recibe una competencia, el formulario se abre en modo edición.
+  const isEdit = competencia !== null;
+  const modalDiv = document.createElement('div');
+  modalDiv.className = 'modal-overlay';
+  modalDiv.innerHTML = `
+    <div class="modal-card">
+      <h3>${isEdit ? 'Editar Competencia' : 'Nueva Competencia'}</h3>
+      <div class="form-group">
+        <label for="modalIdComp">ID Competencia</label>
+        <input id="modalIdComp" type="number" min="1" ${isEdit ? 'readonly' : ''}>
+      </div>
+      <div class="form-group">
+        <label for="modalNomComp">Nombre Competencia</label>
+        <input id="modalNomComp" type="text">
+      </div>
+      <div class="form-group">
+        <label for="modalTipoComp">Tipo</label>
+        <input id="modalTipoComp" type="text">
+      </div>
+      <div class="form-group">
+        <label for="modalDurComp">Duración (Horas)</label>
+        <input id="modalDurComp" type="number" min="1">
+      </div>
+      <div class="flex-buttons">
+        <button id="modalCancelComp" type="button">Cancelar</button>
+        <button id="modalSaveComp" type="button">Guardar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modalDiv);
+
+  modalDiv.querySelector('#modalIdComp').value = isEdit ? competencia.id_competen : '';
+  modalDiv.querySelector('#modalNomComp').value = isEdit ? competencia.nom_competen : '';
+  modalDiv.querySelector('#modalTipoComp').value = isEdit ? competencia.tip_competen || '' : '';
+  modalDiv.querySelector('#modalDurComp').value = isEdit ? competencia.dur_competen ?? '' : '';
+  modalDiv.querySelector('#modalCancelComp').onclick = () => modalDiv.remove();
+
+  modalDiv.querySelector('#modalSaveComp').onclick = () => {
+    const id = Number(modalDiv.querySelector('#modalIdComp').value);
+    const nombre = modalDiv.querySelector('#modalNomComp').value.trim();
+    const tipo = modalDiv.querySelector('#modalTipoComp').value.trim();
+    const duracion = Number(modalDiv.querySelector('#modalDurComp').value);
+
+    // Valida los datos antes de crear o actualizar el registro.
+    if (!Number.isInteger(id) || id <= 0 || !nombre || !tipo ||
+        !Number.isInteger(duracion) || duracion <= 0) {
+      alert('Ingrese un ID válido, nombre, tipo y una duración en horas mayor que cero.');
+      return;
+    }
+
+    if (!isEdit && competencias.some(item => item.id_competen === id)) {
+      alert('El ID de competencia ya existe.');
+      return;
+    }
+
+    const nuevaCompetencia = {
+      id_competen: id,
+      nom_competen: nombre,
+      tip_competen: tipo,
+      dur_competen: duracion
+    };
+
+    if (isEdit) {
+      const index = competencias.findIndex(item => item.id_competen === id);
+      if (index === -1) {
+        alert('No se encontró la competencia que desea editar.');
+        modalDiv.remove();
+        return;
+      }
+      competencias[index] = nuevaCompetencia;
+    } else {
+      competencias.push(nuevaCompetencia);
+    }
+
+    guardarDatos();
+    renderAll();
+    actualizarSelectsAsignacion();
+    modalDiv.remove();
+  };
 }
 
 function abrirModalFicha() {
@@ -301,31 +427,55 @@ function actualizarSelectsAsignacion() {
   const selectComp = document.getElementById('asignCompetSelect');
   
   if (selectInst) {
-    selectInst.innerHTML = instructores.map(i =>
-      `<option value="${i.id_instruc}">${i.id_instruc} - ${i.nom_instruc} ${i.apelli_instruc}</option>`
-    ).join('');
+    // Actualiza las opciones y conserva la selección si el instructor sigue existiendo.
+    const selectedId = selectInst.value;
+    selectInst.replaceChildren(new Option('Seleccione un instructor...', ''));
+    instructores.forEach(instructor => {
+      selectInst.add(new Option(
+        `${instructor.id_instruc} - ${instructor.nom_instruc} ${instructor.apelli_instruc}`,
+        instructor.id_instruc
+      ));
+    });
+    if (instructores.some(instructor => String(instructor.id_instruc) === selectedId)) {
+      selectInst.value = selectedId;
+    }
   }
   if (selectComp) {
-    selectComp.innerHTML = competencias.map(c =>
-      `<option value="${c.id_competen}">${c.id_competen} - ${c.nom_competen}</option>`
-    ).join('');
+    // Actualiza las competencias disponibles y conserva la selección válida.
+    const selectedId = selectComp.value;
+    selectComp.replaceChildren(new Option('Seleccione una competencia...', ''));
+    competencias.forEach(competencia => {
+      selectComp.add(new Option(
+        `${competencia.id_competen} - ${competencia.nom_competen}`,
+        competencia.id_competen
+      ));
+    });
+    if (competencias.some(competencia => String(competencia.id_competen) === selectedId)) {
+      selectComp.value = selectedId;
+    }
   }
 }
 
 document.getElementById('btnAsignar')?.addEventListener('click', () => {
-  const idInst = parseInt(document.getElementById('asignInstrucSelect')?.value);
-  const idComp = parseInt(document.getElementById('asignCompetSelect')?.value);
+  const idInst = Number(document.getElementById('asignInstrucSelect')?.value);
+  const idComp = Number(document.getElementById('asignCompetSelect')?.value);
   
-  if (!idInst || !idComp) return alert('Seleccione ambos campos');
-
-  if (instructorCompetencias.some(a => a.id_instruc === idInst && a.id_competen === idComp)) {
-    return alert('Ya existe esa asignacion');
+  // Verifica que ambos elementos seleccionados existan antes de guardar la relación.
+  if (!Number.isInteger(idInst) || !instructores.some(i => i.id_instruc === idInst) ||
+      !Number.isInteger(idComp) || !competencias.some(c => c.id_competen === idComp)) {
+    return alert('Seleccione un instructor y una competencia válidos.');
   }
 
+  if (instructorCompetencias.some(a => a.id_instruc === idInst && a.id_competen === idComp)) {
+    return alert('Ese instructor ya está asignado a esa competencia.');
+  }
+
+  // Guarda la relación instructor-competencia y refresca la tabla.
   instructorCompetencias.push({ id_instruc: idInst, id_competen: idComp });
   guardarDatos();
   renderAsignaciones();
-  actualizarSelectsAsignacion();
+  document.getElementById('asignInstrucSelect').value = '';
+  document.getElementById('asignCompetSelect').value = '';
 });
 
 
